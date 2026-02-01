@@ -1,19 +1,15 @@
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import Account from '../models/Account.js';
-import Player from '../models/Player.js';
 
+
+// Validation rules
 // Validation rules
 export const registerValidation = [
     body('name').isLength({ min: 4, max: 32 }).isAlphanumeric(),
     body('password').isLength({ min: 4, max: 255 }),
     body('email').isEmail(),
-    body('nickname').isLength({ min: 4, max: 32 }),
-    body('characterName').isLength({ min: 4, max: 32 }),
-    body('sex').isInt({ min: 0, max: 1 }),
-    body('vocation').isInt(),
-    body('city').isInt(),
-    body('world').isInt()
+    body('nickname').isLength({ min: 4, max: 32 })
 ];
 
 export const loginValidation = [
@@ -29,7 +25,7 @@ export const register = async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { name, password, email, nickname, characterName, sex, vocation, city, world } = req.body;
+        const { name, password, email, nickname } = req.body;
 
         // Check if account/email/nickname exists
         if (await Account.nameExists(name)) {
@@ -41,22 +37,9 @@ export const register = async (req, res) => {
         if (await Account.nicknameExists(nickname)) {
             return res.status(400).json({ error: 'Nickname already exists' });
         }
-        if (await Player.nameExists(characterName)) {
-            return res.status(400).json({ error: 'Character name already exists' });
-        }
 
         // Create account
         const account = await Account.create({ name, password, email, nickname });
-
-        // Create first character
-        const player = await Player.create({
-            accountId: account.id,
-            name: characterName,
-            sex,
-            vocation,
-            city,
-            world
-        });
 
         // Generate JWT token
         const token = jwt.sign(
@@ -73,8 +56,7 @@ export const register = async (req, res) => {
                 name: account.name,
                 email: account.email,
                 nickname: account.nickname
-            },
-            character: player
+            }
         });
     } catch (error) {
         console.error('Register error:', error);
