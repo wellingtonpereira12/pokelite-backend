@@ -24,6 +24,16 @@ class News {
         );
         return rows[0];
     }
+
+    // Placeholder for comments (legacy schema might not support)
+    static async getComments(newsId) {
+        return [];
+    }
+
+    // Placeholder for adding comments
+    static async addComment(newsId, author, body) {
+        return null;
+    }
 }
 
 export default News;

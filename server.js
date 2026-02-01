@@ -60,7 +60,7 @@ app.listen(PORT, () => {
 ╠═══════════════════════════════════════╣
 ║   Port: ${PORT}                        
 ║   Environment: ${process.env.NODE_ENV || 'development'}
-║   Database: PostgreSQL (Neon)         ║
+║   Database: MySQL (TiDB)              ║
 ╚═══════════════════════════════════════╝
   `);
 });

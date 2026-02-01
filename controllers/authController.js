@@ -4,9 +4,9 @@ import Account from '../models/Account.js';
 
 
 // Validation rules
-// Validation rules
 export const registerValidation = [
-    body('name').isLength({ min: 4, max: 32 }).isAlphanumeric(),
+    // Allowing alphanumeric and underscore for account names
+    body('name').isLength({ min: 4, max: 32 }).matches(/^[a-zA-Z0-9_]+$/),
     body('password').isLength({ min: 4, max: 255 }),
     body('email').isEmail(),
     body('nickname').isLength({ min: 4, max: 32 })
@@ -20,21 +20,26 @@ export const loginValidation = [
 // Register new account
 export const register = async (req, res) => {
     try {
+        const { name, password, email, nickname } = req.body;
+        console.log('Register attempt:', { name, email, nickname });
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.log('Validation errors:', errors.array());
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { name, password, email, nickname } = req.body;
-
         // Check if account/email/nickname exists
         if (await Account.nameExists(name)) {
+            console.log('Registration failed: Account name already exists');
             return res.status(400).json({ error: 'Account name already exists' });
         }
         if (await Account.emailExists(email)) {
+            console.log('Registration failed: Email already in use');
             return res.status(400).json({ error: 'Email already in use' });
         }
         if (await Account.nicknameExists(nickname)) {
+            console.log('Registration failed: Nickname already exists');
             return res.status(400).json({ error: 'Nickname already exists' });
         }
 

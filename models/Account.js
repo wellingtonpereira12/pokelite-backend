@@ -1,10 +1,10 @@
 import pool from '../config/database.js';
-import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 class Account {
     // Create new account
     static async create({ name, password, email, nickname }) {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
         const premdays = parseInt(process.env.PREM_DAYS) || 0;
         const creationTime = Math.floor(Date.now() / 1000);
 
@@ -50,15 +50,9 @@ class Account {
         const account = await this.findByName(name);
         if (!account) return null;
 
-        // Check password - old schema might use SHA1, new uses bcrypt
-        // For simplicity during migration, we'll try to support both or focus on the new hashed ones
-        let isValid = false;
-        try {
-            isValid = await bcrypt.compare(password, account.password);
-        } catch (e) {
-            // If bcrypt fails, maybe it's the old SHA1 format?
-            // (Ignoring for now to keep it clean, assuming new hashes for new tests)
-        }
+        // Check password - uses SHA1 for compatibility
+        const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
+        const isValid = hashedPassword === account.password;
 
         if (!isValid) return null;
 
@@ -69,7 +63,7 @@ class Account {
 
     // Update password
     static async updatePassword(accountId, newPassword) {
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = crypto.createHash('sha1').update(newPassword).digest('hex');
         await pool.query(
             'UPDATE accounts SET password = ? WHERE id = ?',
             [hashedPassword, accountId]
